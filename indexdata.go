@@ -114,6 +114,10 @@ func (d *indexData) String() string {
 	return fmt.Sprintf("shard(%s)", d.file.Name())
 }
 
+func (d *indexData) Repo() string {
+	return d.repoMetaData.Name
+}
+
 func (d *indexData) memoryUse() int {
 	sz := 0
 	for _, a := range [][]uint32{

@@ -271,6 +271,9 @@ type SearchOptions struct {
 
 	// Abort the search after this much time has passed.
 	MaxWallTime time.Duration
+
+	// Restrict search to one repository
+	Repo string
 }
 
 func (s *SearchOptions) String() string {

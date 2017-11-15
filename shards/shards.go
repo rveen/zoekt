@@ -45,6 +45,10 @@ func (ss *shardedSearcher) String() string {
 	return "shardedSearcher"
 }
 
+func (ss *shardedSearcher) Repo() string {
+	return ""
+}
+
 // Close closes references to open files. It may be called only once.
 func (ss *shardedSearcher) Close() {
 	ss.lock()
@@ -70,6 +74,8 @@ func (ss *shardedSearcher) Search(ctx context.Context, pat query.Q, opts *zoekt.
 		sr  *zoekt.SearchResult
 		err error
 	}
+
+	println("shards.Search")
 
 	aggregate := zoekt.SearchResult{
 		RepoURLs:      map[string]string{},
@@ -104,6 +110,13 @@ func (ss *shardedSearcher) Search(ctx context.Context, pat query.Q, opts *zoekt.
 	// when looking for the string "com".
 	throttle := make(chan int, 10*runtime.NumCPU())
 	for _, s := range shards {
+
+		if len(opts.Repo) != 0 {
+			if opts.Repo != s.Repo() {
+				continue
+			}
+		}
+
 		go func(s zoekt.Searcher) {
 			throttle <- 1
 			defer func() {
@@ -122,7 +135,14 @@ func (ss *shardedSearcher) Search(ctx context.Context, pat query.Q, opts *zoekt.
 		}(s)
 	}
 
-	for range shards {
+	for _, s := range shards {
+
+		if len(opts.Repo) != 0 {
+			if opts.Repo != s.Repo() {
+				continue
+			}
+		}
+
 		r := <-all
 		if r.err != nil {
 			return nil, r.err
