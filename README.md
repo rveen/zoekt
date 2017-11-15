@@ -1,3 +1,12 @@
+# Why this fork
+
+This fork (hack) adds some features I needed:
+
+- SVN repository indexing
+- Repo option in zoekt.Search (restrict search to one repository by option)
+- zoektrf, a microservice based on github.com/rveen/ogdl/ogdlrf.
+
+---
 
     "Zoekt, en gij zult spinazie eten" - Jan Eertink
 
