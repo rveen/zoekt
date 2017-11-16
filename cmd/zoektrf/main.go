@@ -16,7 +16,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"net"
 	"time"
@@ -54,14 +53,15 @@ func main() {
 
 func search(c net.Conn, g *ogdl.Graph) *ogdl.Graph {
 
-	q := g.GetAt(0).String()
+	q := g.GetAt(0).GetAt(0).ThisString()
+	repo := g.GetAt(0).GetAt(1).ThisString()
 
-	re, _ := Search(q, 50)
+	re, _ := Search(q, 50, repo)
 
 	return re
 }
 
-func Search(qs string, num int) (*ogdl.Graph, error) {
+func Search(qs string, num int, repo string) (*ogdl.Graph, error) {
 
 	q, err := query.Parse(qs)
 	if err != nil {
@@ -80,8 +80,10 @@ func Search(qs string, num int) (*ogdl.Graph, error) {
 
 	sOpts.SetDefaults()
 
+	sOpts.Repo = repo
+
 	ctx := context.Background()
-	if result, err := searcher.Search(ctx, q, &zoekt.SearchOptions{EstimateDocCount: true}); err != nil {
+	if result, err := searcher.Search(ctx, q, &zoekt.SearchOptions{EstimateDocCount: true, Repo: repo}); err != nil {
 		return nil, err
 	} else if numdocs := result.ShardFilesConsidered; numdocs > 10000 {
 		// If the search touches many shards and many files, we
@@ -118,14 +120,13 @@ func Search(qs string, num int) (*ogdl.Graph, error) {
 	g := ogdl.New()
 
 	for _, f := range result.Files {
-		g.Add(f.FileName)
-	}
-
-	for _, f := range result.Files {
-		fmt.Println("repo:", f.Repository)
-		//	for _, l := range f.LineMatches {
-		//fmt.Println(l.LineNumber, string(l.Line))
-		//	}
+		n := g.Add("_")
+		n.Add("file").Add(f.FileName)
+		n.Add("repo").Add(f.Repository)
+		ll := n.Add("lines")
+		for _, l := range f.LineMatches {
+			ll.Add(l.Line)
+		}
 	}
 
 	return g, nil
