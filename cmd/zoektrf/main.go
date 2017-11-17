@@ -39,6 +39,7 @@ func main() {
 	var err error
 
 	index := flag.String("index", build.DefaultDir, "set index directory to use")
+	oldProtocol := flag.Bool("old", false, "set old protocol (no byte length header)")
 	flag.Parse()
 
 	searcher, err = shards.NewDirectorySearcher(*index)
@@ -46,9 +47,15 @@ func main() {
 		log.Fatal(err)
 	}
 
-	srv := rf.Server{Host: ":1166", Timeout: 10}
+	srv := rf.Server{Host: ":1166", Timeout: 10, Protocol: 0}
+	if *oldProtocol {
+		srv.Protocol = 1
+	}
+
 	srv.AddRoute("search", search)
+
 	srv.Serve()
+
 }
 
 func search(c net.Conn, g *ogdl.Graph) *ogdl.Graph {
